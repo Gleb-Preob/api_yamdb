@@ -40,11 +40,13 @@ class User(AbstractUser):
         verbose_name='Роль',
         max_length=50,
         choices=ROLES,
-        default=USER
+        default=USER,
+        help_text='Роль пользователя'
     )
     bio = models.TextField(
         verbose_name='О себе',
-        blank=True
+        blank=True,
+        help_text='Биография пользователя'
     )
 
     @property
@@ -120,21 +122,21 @@ class Title(models.Model):
     year = models.IntegerField(
         'Год создания',
         blank=True,
-        validators=[MaxValueValidator(int(datetime.now().year))], )
+        validators=[MaxValueValidator(int(datetime.now().year))],)
     description = models.TextField(
         'Описание',
         blank=True)
     genre = models.ManyToManyField(
         Genre,
         related_name='titles',
-        verbose_name='Жанр', )
+        verbose_name='Жанр',)
     category = models.ForeignKey(
         Category,
         blank=True,
         null=True,
         on_delete=models.SET_NULL,
         related_name='titles',
-        verbose_name='Категория', )
+        verbose_name='Категория',)
 
     class Meta:
         verbose_name = 'Произведение'
