@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, UnicodeUsernameValidator
 from django.core.validators import MaxValueValidator, validate_email
 from django.db import models
 from django.db.models import Q
@@ -20,7 +20,7 @@ class User(AbstractUser):
         verbose_name='Адрес электронной почты',
         unique=True,
         validators=[validate_email],
-        help_text='Введитте не более 254 символов',
+        help_text='Введите адрес электронной почты',
         error_messages={
             'unique': "Пользователь с данным email уже существует.",
         }
@@ -30,7 +30,8 @@ class User(AbstractUser):
         max_length=150,
         null=True,
         unique=True,
-        help_text='введите не более 150 символов',
+        validators=[UnicodeUsernameValidator()],
+        help_text='Введите имя пользователя',
         error_messages={
             'unique': "Пользователь с указанным username уже существует.",
         },
@@ -43,7 +44,6 @@ class User(AbstractUser):
     )
     bio = models.TextField(
         verbose_name='О себе',
-        null=True,
         blank=True
     )
 
@@ -55,8 +55,11 @@ class User(AbstractUser):
     def is_admin(self):
         return self.role == self.ADMIN
 
+    def __str__(self):
+        return self.email
+
     class Meta:
-        ordering = ['email']
+        ordering = ('email', )
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
