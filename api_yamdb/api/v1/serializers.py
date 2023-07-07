@@ -1,6 +1,7 @@
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Genre, Title, Review, Comment
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -26,6 +27,10 @@ class TitleShowSerializer(serializers.ModelSerializer):
 
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(read_only=True, many=True)
+    rating = serializers.IntegerField(
+        read_only=True,
+        source='reviews__score__avg'
+    )
 
     class Meta:
         fields = '__all__'
@@ -43,3 +48,44 @@ class TitleCreateSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Title
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        slug_field='username',
+        read_only=True
+    )
+    title = serializers.SlugRelatedField(
+        slug_field='name',
+        read_only=True,
+    )
+    score = serializers.IntegerField(min_value=1, max_value=10)
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+
+    def validate(self, data):
+        request = self.context.get('request')
+        view = self.context.get('view')
+        author = request.user
+        title = get_object_or_404(Title, id=view.kwargs.get('title_id'))
+
+        if (title.reviews.filter(author=author).exists()
+           and request.method == 'POST'):
+            raise serializers.ValidationError(
+                'Вы уже отправляли отзыв на это произведение. '
+                'Возможно составить только один отзыв.'
+            )
+        return data
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comment
+        read_only_fields = ('review',)
