@@ -159,6 +159,7 @@ class Review(models.Model):
     )
     title = models.ForeignKey(
         Title,
+        verbose_name="Произведение",
         on_delete=models.CASCADE,
         related_name='reviews',
     )
