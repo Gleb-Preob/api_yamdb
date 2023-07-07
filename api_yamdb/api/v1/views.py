@@ -3,7 +3,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.mixins import (
     CreateModelMixin, DestroyModelMixin, ListModelMixin,
 )
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from reviews.models import Category, Genre, Title
 
@@ -13,7 +13,8 @@ from .serializers import (
 )
 
 
-class CategoryViewSet(CreateModelMixin,
+class CategoryViewSet(GenericViewSet,
+                      CreateModelMixin,
                       DestroyModelMixin,
                       ListModelMixin):
     """Вьюсет для категории."""
@@ -26,7 +27,8 @@ class CategoryViewSet(CreateModelMixin,
     lookup_field = 'slug'
 
 
-class GenreViewSet(CreateModelMixin,
+class GenreViewSet(GenericViewSet,
+                   CreateModelMixin,
                    DestroyModelMixin,
                    ListModelMixin):
     """Вьюсет для жанра."""
