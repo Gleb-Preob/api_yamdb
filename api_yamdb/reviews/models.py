@@ -12,9 +12,9 @@ class User(AbstractUser):
     MODERATOR = 'moderator'
     USER = 'user'
     ROLES = [
-        (ADMIN, 'Administrator'),
-        (MODERATOR, 'Moderator'),
-        (USER, 'User'),
+        (ADMIN, ADMIN.title()),
+        (MODERATOR, MODERATOR.title()),
+        (USER, USER.title()),
     ]
 
     email = models.EmailField(
@@ -60,10 +60,10 @@ class User(AbstractUser):
         return self.role == self.ADMIN
 
     def __str__(self):
-        return self.email
+        return self.username
 
     class Meta:
-        ordering = ('email', )
+        ordering = ('username', )
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
 
