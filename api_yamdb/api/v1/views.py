@@ -57,7 +57,7 @@ class TitleViewSet(ModelViewSet):
     """Вьюсет для произведения."""
 
     queryset = Title.objects.all().annotate(
-        Avg('reviews__score')).order_by('-pub_date')
+        Avg('reviews__score')).order_by('-year')
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter,)
     http_method_names = ('get', 'post', 'delete', 'patch')
