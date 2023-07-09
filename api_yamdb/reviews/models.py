@@ -1,10 +1,12 @@
 from datetime import datetime
 
-from django.contrib.auth.models import AbstractUser, UnicodeUsernameValidator
+from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MinValueValidator, MaxValueValidator, validate_email)
 from django.db import models
 from django.db.models import Q
+
+from .validators import UsernameRegexValidator
 
 
 class User(AbstractUser):
@@ -32,7 +34,7 @@ class User(AbstractUser):
         max_length=150,
         null=True,
         unique=True,
-        validators=[UnicodeUsernameValidator()],
+        validators=[UsernameRegexValidator()],
         help_text='Введите имя пользователя',
         error_messages={
             'unique': "Пользователь с указанным username уже существует.",

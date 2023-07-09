@@ -3,6 +3,7 @@ from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
 
 from reviews.models import Category, Genre, Title, Review, Comment, User
+from reviews.validators import UsernameRegexValidator
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -97,7 +98,8 @@ class CommentSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
-            UniqueValidator(queryset=User.objects.all())
+            UniqueValidator(queryset=User.objects.all()),
+            UsernameRegexValidator()
         ],
         required=True,
         max_length=150,
@@ -126,7 +128,8 @@ class UserEditSerializer(serializers.ModelSerializer):
 class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
-            UniqueValidator(queryset=User.objects.all())
+            UniqueValidator(queryset=User.objects.all()),
+            UsernameRegexValidator()
         ],
         max_length=150,
     )
@@ -148,5 +151,10 @@ class RegisterDataSerializer(serializers.ModelSerializer):
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    confirmation_code = serializers.CharField()
+    username = serializers.CharField(
+        required=True,
+        validators=(UsernameRegexValidator(),)
+    )
+    confirmation_code = serializers.CharField(
+        required=True
+    )
