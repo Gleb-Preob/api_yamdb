@@ -16,4 +16,3 @@ class UsernameRegexValidator(UnicodeUsernameValidator):
                    'Только буквы, цифры и @/./+/-/_',
         'required': 'Поле не может быть пустым',
     }
-    

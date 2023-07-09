@@ -2,7 +2,8 @@ from datetime import datetime
 
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
-    MinValueValidator, MaxValueValidator, validate_email)
+    MaxValueValidator, MinValueValidator, validate_email,
+)
 from django.db import models
 from django.db.models import Q
 
@@ -150,7 +151,7 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-    
+
 
 class GenreTitle(models.Model):
     """Служебная модель для БД."""

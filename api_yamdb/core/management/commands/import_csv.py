@@ -1,17 +1,19 @@
-import sqlite3
 import csv
 import os
+import sqlite3
 
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title, User
+from reviews.models import (
+    Category, Comment, Genre, GenreTitle, Review, Title, User,
+)
 
 
 class Command(BaseCommand):
     help = 'Imports .csv data to DB'
 
-    FILE_TO_MODEL= {
+    FILE_TO_MODEL = {
         'category.csv': Category,
         'genre.csv': Genre,
         'titles.csv': Title,
@@ -41,11 +43,9 @@ class Command(BaseCommand):
                     headers.append(header)
             return list(csv.DictReader(file, fieldnames=headers))
 
-
     def load_csv(self, data, model):
         for row in data:
-                model.objects.create(**row)
-            
+            model.objects.create(**row)
 
     def handle(self, *args, **options):
         for file_name, model in self.FILE_TO_MODEL.items():
@@ -53,20 +53,20 @@ class Command(BaseCommand):
             data = self.read_csv(file_path)
             self.load_csv(data, model)
 
-        # во время миграции службной модели, 
-        # которая создалась для реализации связи 
-        # title_genre, создалась таблица genretitle. 
+        # во время миграции службной модели,
+        # которая создалась для реализации связи
+        # title_genre, создалась таблица genretitle.
         # иного способа, кроме нижеизложенного,
         # для заполнения title_genre не придумали
 
         connection = sqlite3.connect(self.DB_PATH)
         cursor = connection.cursor()
 
-        cursor.execute(
-            f'INSERT INTO reviews_title_genre(id, title_id, genre_id)'
-            f'SELECT *'
-            f'FROM reviews_genretitle'
-        )
+        cursor.execute('''
+        INSERT INTO reviews_title_genre(id, title_id, genre_id),
+        SELECT *,
+        FROM reviews_genretitle;
+        ''')
 
         connection.commit()
         connection.close()
