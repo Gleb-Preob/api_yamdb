@@ -7,6 +7,8 @@ from .models import Category, Genre, Title, User, Review, Comment
 class UserAdmin(admin.ModelAdmin):
     list_display = (
         'email', 'username', 'bio', 'role', 'first_name', 'last_name')
+    list_editable = ('role',)
+    list_filter = ('username', 'role',)
     empty_value_display = '-пусто-'
 
 
