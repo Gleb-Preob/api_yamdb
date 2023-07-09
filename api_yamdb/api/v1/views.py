@@ -1,19 +1,20 @@
+from django.conf import settings
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
-from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.filters import SearchFilter
 from rest_framework.mixins import (
     CreateModelMixin, DestroyModelMixin, ListModelMixin,
 )
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
-
+from rest_framework_simplejwt.tokens import AccessToken
 from reviews.models import Category, Genre, Title, Review, User
 
 from .filters import TitlesFilter
@@ -101,21 +102,28 @@ class CommentViewSet(ModelViewSet):
         serializer.save(author=self.request.user, review=self.get_review())
 
 
-@api_view(["POST"])
+@api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    serializer.save()
-    user = get_object_or_404(
-        User,
-        username=serializer.validated_data["username"]
-    )
+    username = serializer.data['username']
+    email = serializer.data['email']
+    try:
+        user, _ = User.objects.get_or_create(
+            username=username,
+            email=email,
+        )
+    except IntegrityError:
+        return Response('Указанные данные не корректны',
+                        status=status.HTTP_400_BAD_REQUEST)
     confirmation_code = default_token_generator.make_token(user)
+    user.confirmation_code = confirmation_code
+    user.save()
     send_mail(
-        subject="YaMDb registration",
-        message=f"Your confirmation code: {confirmation_code}",
-        from_email=None,
+        subject="Регистрация на YaMDb",
+        message=f"Ваш код подтверждения: {confirmation_code}",
+        from_email=settings.DEFAULT_FROM_EMAIL,
         recipient_list=[user.email],
     )
     return Response(serializer.data, status=status.HTTP_200_OK)
