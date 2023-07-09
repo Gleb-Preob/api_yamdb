@@ -127,23 +127,14 @@ class UserEditSerializer(serializers.ModelSerializer):
 
 class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all()),
-            UsernameRegexValidator()
-        ],
         max_length=150,
+        required=True,
+        validators=[UsernameRegexValidator(), ]
     )
     email = serializers.EmailField(
-        validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ],
         max_length=254,
+        required=True
     )
-
-    def validate_username(self, value):
-        if value.lower() == "me":
-            raise serializers.ValidationError("Username 'me' is not valid")
-        return value
 
     class Meta:
         fields = ("username", "email")
