@@ -2,6 +2,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action, api_view, permission_classes
@@ -15,6 +16,7 @@ from rest_framework.viewsets import ModelViewSet, GenericViewSet
 
 from reviews.models import Category, Genre, Title, Review, User
 
+from .filters import TitlesFilter
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOwnerOrReadOnly
 from .serializers import (
     CategorySerializer, GenreSerializer,
@@ -35,7 +37,7 @@ class CategoryViewSet(GenericViewSet,
     serializer_class = CategorySerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter,)
-    search_fields = ('name',)
+    search_fields = ('=name',)
     lookup_field = 'slug'
 
 
@@ -49,17 +51,18 @@ class GenreViewSet(GenericViewSet,
     serializer_class = GenreSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (SearchFilter,)
-    search_fields = ('name',)
+    search_fields = ('=name',)
     lookup_field = 'slug'
 
 
 class TitleViewSet(ModelViewSet):
-    """Вьюсет для произведения."""
+    """Вьюсет для произведений."""
 
     queryset = Title.objects.all().annotate(
         Avg('reviews__score')).order_by('-year')
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (SearchFilter,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitlesFilter
     http_method_names = ('get', 'post', 'delete', 'patch')
 
     def get_serializer_class(self):
@@ -115,7 +118,6 @@ def register(request):
         from_email=None,
         recipient_list=[user.email],
     )
-
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -144,6 +146,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     pagination_class = PageNumberPagination
     permission_classes = (IsAdmin,)
+    filter_backends = (SearchFilter, DjangoFilterBackend,)
+    search_fields = ('username',)
 
     @action(
         methods=[

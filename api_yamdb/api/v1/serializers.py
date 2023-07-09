@@ -52,6 +52,7 @@ class TitleCreateSerializer(serializers.ModelSerializer):
 
 
 class ReviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для отзывов."""
     author = serializers.SlugRelatedField(
         slug_field='username',
         read_only=True
@@ -82,6 +83,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    """Сериализатор для комментариев."""
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
     )
@@ -98,11 +100,13 @@ class UserSerializer(serializers.ModelSerializer):
             UniqueValidator(queryset=User.objects.all())
         ],
         required=True,
+        max_length=150,
     )
     email = serializers.EmailField(
         validators=[
             UniqueValidator(queryset=User.objects.all())
-        ]
+        ],
+        max_length=254,
     )
 
     class Meta:
@@ -123,12 +127,14 @@ class RegisterDataSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
             UniqueValidator(queryset=User.objects.all())
-        ]
+        ],
+        max_length=150,
     )
     email = serializers.EmailField(
         validators=[
             UniqueValidator(queryset=User.objects.all())
-        ]
+        ],
+        max_length=254,
     )
 
     def validate_username(self, value):
