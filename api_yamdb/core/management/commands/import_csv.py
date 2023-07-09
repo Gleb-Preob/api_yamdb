@@ -1,56 +1,72 @@
-import csv
 import sqlite3
+import csv
+import os
 
 from django.conf import settings
-from django.core.management.base import BaseCommand
+from django.core.management import BaseCommand
+
+from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title, User
 
 
 class Command(BaseCommand):
     help = 'Imports .csv data to DB'
 
-    FILES_NAMES = {
-        'category.csv': 'reviews_category',
-        'comments.csv': 'reviews_comment',
-        'genre.csv': 'reviews_genre',
-        'genre_title.csv': 'reviews_title_genre',
-        'review.csv': 'reviews_review',
-        'titles.csv': 'reviews_title',
-        'users.csv': 'users_user',
+    FILE_TO_MODEL= {
+        'category.csv': Category,
+        'genre.csv': Genre,
+        'titles.csv': Title,
+        'genre_title.csv': GenreTitle,
+        'users.csv': User,
+        'review.csv': Review,
+        'comments.csv': Comment,
     }
+
+    ALIAS_FOR_FIELDS = {
+        'category': 'category_id',
+        'author': 'author_id',
+    }
+
+    CSV_PATH = os.path.join(settings.BASE_DIR, 'static/data')
+
     DB_PATH = settings.DATABASES['default']['NAME']
 
-    def handle(self, *args, **options):
-        csv_root = settings.BASE_DIR/'static'/'data'
-        files_paths = list(csv_root.glob('*.csv'))
-        for file_path in files_paths:
-            self.import_to_db(file_path)
+    def read_csv(self, file_path):
+        with (open(file_path, encoding='utf-8')) as file:
+            csv_file_headers = next(csv.reader(file))
+            headers = []
+            for header in csv_file_headers:
+                if header in self.ALIAS_FOR_FIELDS:
+                    headers.append(self.ALIAS_FOR_FIELDS[header])
+                else:
+                    headers.append(header)
+            return list(csv.DictReader(file, fieldnames=headers))
 
-    def import_to_db(self, file_path):
+
+    def load_csv(self, data, model):
+        for row in data:
+                model.objects.create(**row)
+            
+
+    def handle(self, *args, **options):
+        for file_name, model in self.FILE_TO_MODEL.items():
+            file_path = os.path.join(self.CSV_PATH, file_name)
+            data = self.read_csv(file_path)
+            self.load_csv(data, model)
+
+        # во время миграции службной модели, 
+        # которая создалась для реализации связи 
+        # title_genre, создалась таблица genretitle. 
+        # иного способа, кроме нижеизложенного,
+        # для заполнения title_genre не придумали
+
         connection = sqlite3.connect(self.DB_PATH)
         cursor = connection.cursor()
 
-        with open(file_path, newline='', encoding='utf-8') as csv_file:
-            dict_reader = csv.DictReader(csv_file)
-            db = [i for i in dict_reader]
-
-        table_keys = db[0].keys()
-        values_query = self.make_values_query(table_keys)
-        current_table = self.FILES_NAMES[file_path.name]
-        table_fields = ', '.join(table_keys)
-
-        cursor.executemany(
-            (
-                f'INSERT INTO {current_table}({table_fields}) '
-                f'VALUES ({values_query});'
-            ),
-            db,
+        cursor.execute(
+            f'INSERT INTO reviews_title_genre(id, title_id, genre_id)'
+            f'SELECT *'
+            f'FROM reviews_genretitle'
         )
+
         connection.commit()
         connection.close()
-
-    @staticmethod
-    def make_values_query(table_keys):
-        result = ''
-        for key in table_keys:
-            result += f':{key}, '
-        return result[:-2]
