@@ -8,8 +8,8 @@ class UsernameRegexValidator(UnicodeUsernameValidator):
     regex = r'^[\w.@+-]+\Z'
     flags = 0
     max_length = settings.LEN_DATA_USER
-    message = (f'Введите правильное имя пользователя. Оно может содержать'
-               f' только буквы, цифры и знаки @/./+/-/_.'
+    message = ('Введите правильное имя пользователя. Оно может содержать'
+               ' только буквы, цифры и знаки @/./+/-/_.'
                f' Длина не более {settings.LEN_DATA_USER} символов')
     error_messages = {
         'invalid': f'Набор символов не более {settings.LEN_DATA_USER}. '
