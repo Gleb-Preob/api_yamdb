@@ -63,8 +63,8 @@ class Command(BaseCommand):
         cursor = connection.cursor()
 
         cursor.execute('''
-        INSERT INTO reviews_title_genre(id, title_id, genre_id),
-        SELECT *,
+        INSERT INTO reviews_title_genre(id, title_id, genre_id)
+        SELECT *
         FROM reviews_genretitle;
         ''')
 
