@@ -106,8 +106,8 @@ class CommentViewSet(ModelViewSet):
 def register(request):
     serializer = RegisterDataSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
-    username = serializer.data['username']
-    email = serializer.data['email']
+    username = serializer.validated_data['username']
+    email = serializer.validated_data['email']
     try:
         user, _ = User.objects.get_or_create(
             username=username,
