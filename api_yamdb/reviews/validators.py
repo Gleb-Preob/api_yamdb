@@ -1,5 +1,8 @@
+import datetime as dt
+
 from django.conf import settings
 from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.exceptions import ValidationError
 
 
 class UsernameRegexValidator(UnicodeUsernameValidator):
@@ -16,3 +19,10 @@ class UsernameRegexValidator(UnicodeUsernameValidator):
                    'Только буквы, цифры и @/./+/-/_',
         'required': 'Поле не может быть пустым',
     }
+
+
+def validate_year(year):
+    current_day = dt.date.today()
+    if year > current_day.year:
+        raise ValidationError('Вы не Марти Макфлай!'
+                              'Год не должен быть из будущего!')
