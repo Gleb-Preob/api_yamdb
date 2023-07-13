@@ -197,7 +197,10 @@ class Review(models.Model):
     score = models.PositiveSmallIntegerField(
         verbose_name='Оценка',
         help_text='Укажите рейтинг от 1 до 10',
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[
+            MinValueValidator(1, 'Допускаются значения не менее 1'),
+            MaxValueValidator(10, 'Допускаются значения не более 10')
+        ],
     )
     text = models.TextField(
         verbose_name='Текст',
