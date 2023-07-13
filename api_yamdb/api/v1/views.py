@@ -2,12 +2,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.filters import SearchFilter
-from rest_framework.mixins import (
-    CreateModelMixin, DestroyModelMixin, ListModelMixin,
-)
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, ModelViewSet
+from rest_framework.viewsets import ModelViewSet
 from rest_framework_simplejwt.tokens import AccessToken
 
 from django.conf import settings
@@ -17,20 +14,18 @@ from django.db import IntegrityError
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
-from reviews.models import Category, Genre, Review, Title, User
 from .filters import TitlesFilter
+from .mixins import DestroyCreateListMixin, PutDenyMixin
 from .permissions import IsAdmin, IsAdminOrReadOnly, IsAdminOwnerOrReadOnly
 from .serializers import (
     CategorySerializer, CommentSerializer, GenreSerializer,
     RegisterDataSerializer, ReviewSerializer, TitleCreateSerializer,
     TitleShowSerializer, TokenSerializer, UserEditSerializer, UserSerializer,
 )
+from reviews.models import Category, Genre, Review, Title, User
 
 
-class CategoryViewSet(GenericViewSet,
-                      CreateModelMixin,
-                      DestroyModelMixin,
-                      ListModelMixin):
+class CategoryViewSet(DestroyCreateListMixin):
     """Вьюсет для категории."""
 
     queryset = Category.objects.all()
@@ -41,10 +36,7 @@ class CategoryViewSet(GenericViewSet,
     lookup_field = 'slug'
 
 
-class GenreViewSet(GenericViewSet,
-                   CreateModelMixin,
-                   DestroyModelMixin,
-                   ListModelMixin):
+class GenreViewSet(DestroyCreateListMixin):
     """Вьюсет для жанра."""
 
     queryset = Genre.objects.all()
@@ -55,7 +47,7 @@ class GenreViewSet(GenericViewSet,
     lookup_field = 'slug'
 
 
-class TitleViewSet(ModelViewSet):
+class TitleViewSet(PutDenyMixin):
     """Вьюсет для произведений."""
 
     queryset = Title.objects.all().annotate(

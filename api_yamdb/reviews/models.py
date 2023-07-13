@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator, MinValueValidator, validate_email,
@@ -7,7 +5,7 @@ from django.core.validators import (
 from django.db import models
 from django.db.models import Q
 
-from .validators import UsernameRegexValidator
+from .validators import UsernameRegexValidator, validate_year
 
 
 class User(AbstractUser):
@@ -132,7 +130,7 @@ class Title(models.Model):
     year = models.IntegerField(
         'Год создания',
         blank=True,
-        validators=[MaxValueValidator(int(datetime.now().year))],
+        validators=[validate_year, ],
         db_index=True,)
     description = models.TextField(
         'Описание',
