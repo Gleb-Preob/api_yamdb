@@ -62,7 +62,13 @@ class ReviewSerializer(serializers.ModelSerializer):
         slug_field='name',
         read_only=True,
     )
-    score = serializers.IntegerField(min_value=1, max_value=10)
+    score = serializers.IntegerField(
+        min_value=1,
+        max_value=10,
+        error_messages={
+            'only_limited_values': 'Допускаются значения от 1 до 10'
+        }
+    )
 
     class Meta:
         fields = '__all__'
