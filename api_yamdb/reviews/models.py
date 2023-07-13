@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import (
     MaxValueValidator, MinValueValidator, validate_email,
@@ -7,18 +5,18 @@ from django.core.validators import (
 from django.db import models
 from django.db.models import Q
 
-from .validators import UsernameRegexValidator
+from .validators import UsernameRegexValidator, validate_year
 
 
 class User(AbstractUser):
     ADMIN = 'admin'
     MODERATOR = 'moderator'
     USER = 'user'
-    ROLES = [
+    ROLES = (
         (ADMIN, ADMIN.title()),
         (MODERATOR, MODERATOR.title()),
         (USER, USER.title()),
-    ]
+    )
 
     email = models.EmailField(
         verbose_name='Адрес электронной почты',
@@ -27,7 +25,7 @@ class User(AbstractUser):
         validators=[validate_email],
         help_text='Введите адрес электронной почты',
         error_messages={
-            'unique': "Пользователь с данным email уже существует.",
+            'unique': 'Пользователь с данным email уже существует.',
         }
     )
     username = models.CharField(
@@ -38,8 +36,9 @@ class User(AbstractUser):
         validators=[UsernameRegexValidator()],
         help_text='Введите имя пользователя',
         error_messages={
-            'unique': "Пользователь с указанным username уже существует.",
+            'unique': 'Пользователь с указанным username уже существует.',
         },
+        db_index=True,
     )
     role = models.CharField(
         verbose_name='Роль',
@@ -72,14 +71,14 @@ class User(AbstractUser):
 
         constraints = [
             models.CheckConstraint(
-                check=~Q(username__iexact="me"),
-                name="username_is_not_me"
+                check=~Q(username__iexact='me'),
+                name='username_is_not_me'
             )
         ]
 
 
 class Category(models.Model):
-    """Модель категории."""
+    '''Модель категории.'''
 
     name = models.CharField(
         'Название категории',
@@ -87,7 +86,9 @@ class Category(models.Model):
     slug = models.SlugField(
         'Читабельный url категории',
         max_length=50,
-        unique=True)
+        unique=True,
+        db_index=True,
+    )
 
     class Meta:
         verbose_name = 'Категория'
@@ -99,7 +100,7 @@ class Category(models.Model):
 
 
 class Genre(models.Model):
-    """Модель жанра."""
+    '''Модель жанра.'''
 
     name = models.CharField(
         'Название жанра',
@@ -107,19 +108,21 @@ class Genre(models.Model):
     slug = models.SlugField(
         'Читабельный url жанра',
         max_length=50,
-        unique=True)
+        unique=True,
+        db_index=True,
+    )
 
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-        ordering = ('id',)
+        ordering = ('slug',)
 
     def __str__(self):
         return self.slug
 
 
 class Title(models.Model):
-    """Модель произведения."""
+    '''Модель произведения.'''
 
     name = models.CharField(
         'Название произведения',
@@ -127,7 +130,8 @@ class Title(models.Model):
     year = models.IntegerField(
         'Год создания',
         blank=True,
-        validators=[MaxValueValidator(int(datetime.now().year))],)
+        validators=[validate_year, ],
+        db_index=True,)
     description = models.TextField(
         'Описание',
         blank=True)
@@ -147,14 +151,14 @@ class Title(models.Model):
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-        ordering = ('id',)
+        ordering = ('-year',)
 
     def __str__(self):
         return self.name
 
 
 class GenreTitle(models.Model):
-    """Служебная модель для БД."""
+    '''Служебная модель для БД.'''
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
@@ -175,42 +179,45 @@ class GenreTitle(models.Model):
 
 
 class Review(models.Model):
-    """Модель отзыва."""
+    '''Модель отзыва.'''
     author = models.ForeignKey(
         User,
-        verbose_name="Автор",
+        verbose_name='Автор',
         on_delete=models.CASCADE,
         related_name='reviews',
     )
     title = models.ForeignKey(
         Title,
-        verbose_name="Произведение",
+        verbose_name='Произведение',
         on_delete=models.CASCADE,
         related_name='reviews',
     )
     score = models.PositiveSmallIntegerField(
-        verbose_name="Оценка",
+        verbose_name='Оценка',
         help_text='Укажите рейтинг от 1 до 10',
-        validators=[MinValueValidator(1), MaxValueValidator(10)],
+        validators=[
+            MinValueValidator(1, 'Допускаются значения не менее 1'),
+            MaxValueValidator(10, 'Допускаются значения не более 10')
+        ],
     )
     text = models.TextField(
-        verbose_name="Текст",
-        help_text="Текст отзыва",
+        verbose_name='Текст',
+        help_text='Текст отзыва',
     )
     pub_date = models.DateTimeField(
-        verbose_name="Дата размещения отзыва",
+        verbose_name='Дата размещения отзыва',
         auto_now_add=True,
         db_index=True,
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=['author', 'title'],
+                fields=('author', 'title',),
                 name='unique_review',
             ),
-        ]
-        ordering = ("-pub_date",)
+        )
+        ordering = ('-pub_date',)
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
 
@@ -219,7 +226,7 @@ class Review(models.Model):
 
 
 class Comment(models.Model):
-    """Модель комментария к отзыву."""
+    '''Модель комментария к отзыву.'''
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -233,19 +240,19 @@ class Comment(models.Model):
         verbose_name='Отзыв',
     )
     pub_date = models.DateTimeField(
-        verbose_name="Дата размещения комментария",
+        verbose_name='Дата размещения комментария',
         auto_now_add=True,
         db_index=True,
     )
     text = models.TextField(
-        verbose_name="Текст",
-        help_text="Текст комментария",
+        verbose_name='Текст',
+        help_text='Текст комментария',
     )
 
     class Meta:
-        ordering = ("-pub_date",)
+        ordering = ('-pub_date',)
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
 
     def __str__(self):
-        return self.text
+        return self.text[:30]

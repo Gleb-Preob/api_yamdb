@@ -33,7 +33,7 @@ class Command(BaseCommand):
     DB_PATH = settings.DATABASES['default']['NAME']
 
     def read_csv(self, file_path):
-        with (open(file_path, encoding='utf-8')) as file:
+        with open(file_path, encoding='utf-8') as file:
             csv_file_headers = next(csv.reader(file))
             headers = []
             for header in csv_file_headers:
@@ -63,8 +63,8 @@ class Command(BaseCommand):
         cursor = connection.cursor()
 
         cursor.execute('''
-        INSERT INTO reviews_title_genre(id, title_id, genre_id),
-        SELECT *,
+        INSERT INTO reviews_title_genre(id, title_id, genre_id)
+        SELECT *
         FROM reviews_genretitle;
         ''')
 
